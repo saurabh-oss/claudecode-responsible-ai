@@ -1,0 +1,203 @@
+# Organizational Policy Definitions for Responsible AI Governance
+# Each policy maps to a category, severity, and applicable roles
+
+policies:
+  # --- Security Policies ---
+  - id: SEC-001
+    name: No Hardcoded Secrets
+    description: API keys, passwords, and tokens must not appear in source code
+    category: security
+    severity: critical
+    applies_to: [developer, tech_lead, security_team]
+    threshold: 0
+    tool: gitleaks
+
+  - id: SEC-002
+    name: No SQL Injection Patterns
+    description: All database queries must use parameterized statements
+    category: security
+    severity: critical
+    applies_to: [developer, tech_lead]
+    threshold: 0
+    tool: bandit
+
+  - id: SEC-003
+    name: Input Validation Required
+    description: All external inputs must be validated and sanitized
+    category: security
+    severity: high
+    applies_to: [developer]
+    threshold: 2
+    tool: semgrep
+
+  - id: SEC-004
+    name: No Shell Injection
+    description: Subprocess calls must not use shell=True with user input
+    category: security
+    severity: critical
+    applies_to: [developer, tech_lead]
+    threshold: 0
+    tool: bandit
+
+  # --- Coding Standards ---
+  - id: CS-001
+    name: SonarQube Quality Gate
+    description: Code must pass SonarQube quality gate (A or B rating)
+    category: coding_standards
+    severity: high
+    applies_to: [developer, tech_lead]
+    threshold: 80
+    tool: sonarqube
+
+  - id: CS-002
+    name: Code Complexity Limit
+    description: Cyclomatic complexity must not exceed 15 per function
+    category: coding_standards
+    severity: medium
+    applies_to: [developer]
+    threshold: 15
+    tool: radon
+
+  - id: CS-003
+    name: Docstring Coverage
+    description: Public functions and classes must have docstrings
+    category: coding_standards
+    severity: low
+    applies_to: [developer]
+    threshold: 70
+    tool: interrogate
+
+  - id: CS-004
+    name: Type Hint Coverage
+    description: Functions must have type annotations
+    category: coding_standards
+    severity: medium
+    applies_to: [developer]
+    threshold: 60
+    tool: mypy
+
+  # --- Data Privacy ---
+  - id: DP-001
+    name: No PII in Logs
+    description: Personally identifiable information must not be written to log files
+    category: data_privacy
+    severity: critical
+    applies_to: [developer, tech_lead, security_team]
+    threshold: 0
+    tool: custom_pii_scanner
+
+  - id: DP-002
+    name: Data Classification Headers
+    description: Files handling sensitive data must include classification headers
+    category: data_privacy
+    severity: high
+    applies_to: [developer, tech_lead]
+    threshold: 90
+    tool: custom_classifier
+
+  - id: DP-003
+    name: Encryption at Rest
+    description: Sensitive data must be encrypted when stored
+    category: data_privacy
+    severity: critical
+    applies_to: [developer, tech_lead, security_team]
+    threshold: 0
+    tool: custom_crypto_check
+
+  # --- Dependency Management ---
+  - id: DM-001
+    name: No Known Vulnerabilities
+    description: Dependencies must not have known CVEs with severity >= High
+    category: dependency_management
+    severity: high
+    applies_to: [developer, tech_lead]
+    threshold: 0
+    tool: safety
+
+  - id: DM-002
+    name: Approved Packages Only
+    description: Only pre-approved packages may be added to requirements
+    category: dependency_management
+    severity: medium
+    applies_to: [developer]
+    threshold: 95
+    tool: custom_allowlist
+
+  # --- Architecture ---
+  - id: AR-001
+    name: API Design Standards
+    description: REST APIs must follow organizational naming and versioning conventions
+    category: architecture
+    severity: medium
+    applies_to: [developer, tech_lead]
+    threshold: 85
+    tool: spectral
+
+  - id: AR-002
+    name: No Direct DB Access from UI
+    description: Frontend code must not contain direct database connection strings
+    category: architecture
+    severity: high
+    applies_to: [developer, tech_lead]
+    threshold: 0
+    tool: custom_arch_check
+
+  # --- Testing ---
+  - id: TS-001
+    name: Minimum Test Coverage
+    description: Code coverage must be at least 70%
+    category: testing
+    severity: high
+    applies_to: [developer, tech_lead]
+    threshold: 70
+    tool: coverage
+
+  - id: TS-002
+    name: AI-Generated Code Tests
+    description: AI-generated code must have corresponding unit tests
+    category: testing
+    severity: high
+    applies_to: [developer]
+    threshold: 80
+    tool: custom_ai_test_check
+
+  # --- Documentation ---
+  - id: DC-001
+    name: README Completeness
+    description: Repositories must have up-to-date README with setup instructions
+    category: documentation
+    severity: low
+    applies_to: [tech_lead]
+    threshold: 90
+    tool: custom_readme_check
+
+  # --- Performance ---
+  - id: PF-001
+    name: No N+1 Queries
+    description: Database access patterns must not exhibit N+1 query anti-patterns
+    category: performance
+    severity: medium
+    applies_to: [developer, tech_lead]
+    threshold: 0
+    tool: custom_query_analyzer
+
+# Token Budget Policies
+token_budgets:
+  per_developer_per_sprint: 150000
+  per_team_per_sprint_multiplier: 1.2  # team_size * per_dev * multiplier
+  alert_threshold_pct: 80
+  escalation_threshold_pct: 100
+
+# Role Definitions
+roles:
+  developer:
+    policies: [SEC-001, SEC-002, SEC-003, SEC-004, CS-001, CS-002, CS-003, CS-004, DP-001, DP-002, DM-001, DM-002, AR-001, AR-002, TS-001, TS-002]
+  tech_lead:
+    policies: [SEC-001, SEC-002, SEC-004, CS-001, CS-002, DP-001, DP-002, DP-003, DM-001, AR-001, AR-002, TS-001, DC-001, PF-001]
+    escalation_target: true
+  security_team:
+    policies: [SEC-001, SEC-002, SEC-003, SEC-004, DP-001, DP-003, DM-001]
+    audit_access: true
+  management:
+    dashboard_access: [compliance_overview, token_cost, adoption_roi]
+    escalation_final: true
